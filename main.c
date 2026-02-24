@@ -44,6 +44,63 @@ int colour_int(int answer, int fighter, GtkWidget *box)
     }
 }
 
+// htp button
+static void on_htp_clicked(GtkWidget *button, DATA *ad)
+{
+    GtkWidget *dialog = gtk_dialog_new_with_buttons(
+        "How to Play",
+        GTK_WINDOW(ad->window),
+        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+        "Close", GTK_RESPONSE_CLOSE,
+        NULL);
+
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 300);
+
+    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+
+    GtkWidget *label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label),
+                         "<span font='13' weight='bold'>How to Play UFCdle</span>\n\n"
+                         "<span font='11'>"
+                         "1. A random UFC fighter has been selected.\n\n"
+                         "2. Type a fighter's name in the search box and press Submit.\n\n"
+                         "3. Each guess reveals stats compared to the mystery fighter:\n"
+                         "   - <b>GREEN</b> = correct\n"
+                         "   - <b>RED</b> = incorrect\n"
+                         "   - <b>HIGHER/LOWER</b> = the answer is higher or lower\n\n"
+                         "4. Keep guessing until you find the fighter!"
+                         "</span>");
+
+    gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    gtk_widget_set_margin_start(label, 20);
+    gtk_widget_set_margin_end(label, 20);
+    gtk_widget_set_margin_top(label, 20);
+    gtk_widget_set_margin_bottom(label, 20);
+
+    gtk_container_add(GTK_CONTAINER(content), label);
+    gtk_widget_show_all(dialog);
+
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+
+// helper method for reset button
+static void remove_if_not_header(GtkWidget *widget, gpointer data)
+{
+    GtkListBox *listbox = GTK_LIST_BOX(data);
+    GtkListBoxRow *row = GTK_LIST_BOX_ROW(widget);
+    if (gtk_list_box_row_get_index(row) != 0)
+    {
+        gtk_widget_destroy(widget);
+    }
+}
+// reset button action
+static void on_reset_clicked(GtkWidget *reset, DATA *ad)
+{
+    ad->answer = random_fighter(ad->bst_root);
+    gtk_container_foreach(GTK_CONTAINER(ad->listbox), remove_if_not_header, ad->listbox);
+}
+
 // submit button action
 static void on_button_clicked(GtkWidget *button, DATA *ad)
 {
@@ -60,10 +117,10 @@ static void on_button_clicked(GtkWidget *button, DATA *ad)
     // name
     GtkWidget *printName = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5); // creates printName box
     gtk_size_group_add_widget(ad->sg_name, printName);
-    gtk_widget_set_name(printName, "guess");                         // set name for css selector
-    gtk_widget_set_size_request(printName, 120, 75);                 // size of box
-    gtk_box_pack_start(GTK_BOX(row), printName, FALSE, FALSE, 0);    // location of box
-    GtkWidget *lname = gtk_label_new(fighter->data.name);            // create label of fighter name
+    gtk_widget_set_name(printName, "guess");                    // set name for css selector
+    gtk_widget_set_size_request(printName, 120, 75);            // size of box
+    gtk_box_pack_start(GTK_BOX(row), printName, TRUE, TRUE, 0); // location of box
+    GtkWidget *lname = gtk_label_new(fighter->data.name);       // create label of fighter name
     GtkStyleContext *ctxName = gtk_widget_get_style_context(printName);
     gtk_style_context_add_class(ctxName, "guess");
     gtk_box_pack_start(GTK_BOX(printName), lname, TRUE, TRUE, 0); // set data of printName
@@ -73,10 +130,10 @@ static void on_button_clicked(GtkWidget *button, DATA *ad)
     // weightclass
     GtkWidget *printWeightclass = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5); // creates printWieghtclass box
     gtk_size_group_add_widget(ad->sg_weightclass, printWeightclass);
-    gtk_widget_set_name(printWeightclass, "guess");                         // set name for css selector
-    gtk_widget_set_size_request(printWeightclass, 120, 75);                 // size of box
-    gtk_box_pack_start(GTK_BOX(row), printWeightclass, FALSE, FALSE, 0);    // location of box
-    GtkWidget *lweightclass = gtk_label_new(fighter->data.weightclass);     // create label of fighter weightclass
+    gtk_widget_set_name(printWeightclass, "guess");                     // set name for css selector
+    gtk_widget_set_size_request(printWeightclass, 120, 75);             // size of box
+    gtk_box_pack_start(GTK_BOX(row), printWeightclass, TRUE, TRUE, 0);  // location of box
+    GtkWidget *lweightclass = gtk_label_new(fighter->data.weightclass); // create label of fighter weightclass
     GtkStyleContext *ctxWeightclass = gtk_widget_get_style_context(printWeightclass);
     gtk_style_context_add_class(ctxWeightclass, "guess");
     gtk_box_pack_start(GTK_BOX(printWeightclass), lweightclass, TRUE, TRUE, 0); // set data of printWeightclass
@@ -84,11 +141,11 @@ static void on_button_clicked(GtkWidget *button, DATA *ad)
     gtk_widget_show_all(printWeightclass);
 
     // wins
-    GtkWidget *printWins = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);                // creates printWins box
+    GtkWidget *printWins = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5); // creates printWins box
     gtk_size_group_add_widget(ad->sg_wins, printWins);
     gtk_widget_set_name(printWins, "guess");                                        // set name for css selector
     gtk_widget_set_size_request(printWins, 120, 75);                                // size of box
-    gtk_box_pack_start(GTK_BOX(row), printWins, FALSE, FALSE, 0);                   // location of box
+    gtk_box_pack_start(GTK_BOX(row), printWins, TRUE, TRUE, 0);                     // location of box
     int winsHoL = colour_int(ad->answer->data.wins, fighter->data.wins, printWins); // set color and stuff
     char *wins_str;
     // create label of fighter wins
@@ -114,9 +171,9 @@ static void on_button_clicked(GtkWidget *button, DATA *ad)
     // loses
     GtkWidget *printLoses = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5); // creates printLoses box
     gtk_size_group_add_widget(ad->sg_loses, printLoses);
-    gtk_widget_set_name(printLoses, "guess");                         // set name for css selector
-    gtk_widget_set_size_request(printLoses, 120, 75);                 // size of box
-    gtk_box_pack_start(GTK_BOX(row), printLoses, FALSE, FALSE, 0);    // location of box
+    gtk_widget_set_name(printLoses, "guess");                    // set name for css selector
+    gtk_widget_set_size_request(printLoses, 120, 75);            // size of box
+    gtk_box_pack_start(GTK_BOX(row), printLoses, TRUE, TRUE, 0); // location of box
     int losesHoL = colour_int(ad->answer->data.loses, fighter->data.loses, printLoses);
     char *loses_str;
     // create label of fighter loses
@@ -142,9 +199,9 @@ static void on_button_clicked(GtkWidget *button, DATA *ad)
     // age
     GtkWidget *printAge = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5); // creates printAge box
     gtk_size_group_add_widget(ad->sg_age, printAge);
-    gtk_widget_set_name(printAge, "guess");                         // set name for css selector
-    gtk_widget_set_size_request(printAge, 120, 75);                 // size of box
-    gtk_box_pack_start(GTK_BOX(row), printAge, FALSE, FALSE, 0);    // location of box
+    gtk_widget_set_name(printAge, "guess");                    // set name for css selector
+    gtk_widget_set_size_request(printAge, 120, 75);            // size of box
+    gtk_box_pack_start(GTK_BOX(row), printAge, TRUE, TRUE, 0); // location of box
     int ageHoL = colour_int(ad->answer->data.age, fighter->data.age, printAge);
     char *age_str;
     // create label of fighter age
@@ -170,17 +227,19 @@ static void on_button_clicked(GtkWidget *button, DATA *ad)
     // country
     GtkWidget *printCountry = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5); // creates printCountry box
     gtk_size_group_add_widget(ad->sg_country, printCountry);
-    gtk_widget_set_name(printCountry, "guess");                         // set name for css selector
-    gtk_widget_set_size_request(printCountry, 120, 75);                 // size of box
-    gtk_box_pack_start(GTK_BOX(row), printCountry, FALSE, FALSE, 0);    // location of box
-    GtkWidget *lcountry = gtk_label_new(fighter->data.country);         // create label of fighter country
+    gtk_widget_set_name(printCountry, "guess");                    // set name for css selector
+    gtk_widget_set_size_request(printCountry, 120, 75);            // size of box
+    gtk_box_pack_start(GTK_BOX(row), printCountry, TRUE, TRUE, 0); // location of box
+    GtkWidget *lcountry = gtk_label_new(fighter->data.country);    // create label of fighter country
     GtkStyleContext *ctxCountry = gtk_widget_get_style_context(printCountry);
     gtk_style_context_add_class(ctxCountry, "guess");
     gtk_box_pack_start(GTK_BOX(printCountry), lcountry, TRUE, TRUE, 0); // set data of printCountry
     colour_str(ad->answer->data.country, fighter->data.country, printCountry);
     gtk_widget_show_all(printCountry);
 
-    gtk_list_box_insert(GTK_LIST_BOX(ad->listbox), row, 0);
+    gtk_list_box_insert(GTK_LIST_BOX(ad->listbox), row, 1);
+    GtkListBoxRow *lbrow = gtk_list_box_get_row_at_index(GTK_LIST_BOX(ad->listbox), 0);
+    gtk_widget_set_hexpand(GTK_WIDGET(lbrow), TRUE);
     gtk_widget_show_all(row);
 }
 
@@ -194,7 +253,7 @@ void guess(DATA *ad, GtkWidget *button)
     }
     create_bst(f, &ad->bst_root);
     ad->answer = random_fighter(ad->bst_root);
-    g_print(ad->answer->data.name);
+    // g_print(ad->answer->data.name);
 
     ad->entry = GTK_ENTRY(gtk_entry_new());
     gtk_widget_set_size_request(GTK_WIDGET(ad->entry), 250, 30);            // size of entry box
@@ -286,29 +345,40 @@ int main(int argc, char *argv[])
     gtk_widget_set_vexpand(ad->listbox, TRUE);
     gtk_widget_set_hexpand(ad->listbox, TRUE);
     gtk_grid_attach(GTK_GRID(ad->grid), ad->listbox, 0, 4, 6, 1);
+    gtk_list_box_set_selection_mode(GTK_LIST_BOX(ad->listbox), GTK_SELECTION_NONE);
+    gtk_container_set_border_width(GTK_CONTAINER(ad->listbox), 0);
 
-    // shows border for grid
-    /**
-        gtk_widget_set_name(ad->grid, "debug-grid");
-        GtkCssProvider *pro = gtk_css_provider_new();
-        gtk_css_provider_load_from_data(provider,
-                                        "#debug-grid > * {"
-                                        "  border: 1px solid red;"
-                                        "}",
-                                        -1, NULL);
+    // create overlay for top title row
+    GtkWidget *overlay = gtk_overlay_new();
+    gtk_widget_set_hexpand(overlay, TRUE);
 
-        gtk_style_context_add_provider_for_screen(
-            gdk_screen_get_default(),
-            GTK_STYLE_PROVIDER(pro),
-            GTK_STYLE_PROVIDER_PRIORITY_USER);
-    */
-
-    // title label
-    GtkWidget *title = gtk_label_new(NULL);
+    GtkWidget *info = gtk_label_new(NULL); // info label
+    gtk_label_set_markup(GTK_LABEL(info), "<span font='10'>Fighter stats as of UFC 324 / Jan 24, 2026</span>");
+    gtk_widget_set_halign(info, GTK_ALIGN_START);
+    gtk_widget_set_valign(info, GTK_ALIGN_CENTER);
+    GtkWidget *title = gtk_label_new(NULL); // title label
     gtk_label_set_markup(GTK_LABEL(title), "<span font='35'>UFCdle</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), title, 0, 0, 6, 1); // location of label
     gtk_widget_set_halign(title, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(title, GTK_ALIGN_CENTER);
     gtk_widget_set_hexpand(title, TRUE);
+    GtkWidget *htp_button = gtk_button_new_with_label("?"); // htp button
+    gtk_widget_set_halign(htp_button, GTK_ALIGN_END);
+    gtk_widget_set_valign(htp_button, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_end(htp_button, 250); // make margin at end bigger (pushs button closer to center)
+
+    gtk_container_add(GTK_CONTAINER(overlay), title);          // base layer, full width
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), info);       // add info
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), htp_button); // add htp button
+    g_signal_connect(htp_button, "clicked", G_CALLBACK(on_htp_clicked), ad);
+
+    gtk_grid_attach(GTK_GRID(ad->grid), overlay, 0, 0, 6, 1); // attach overlay to grid
+
+    // reset button
+    GtkWidget *reset = gtk_button_new_with_label("New Game");
+    gtk_grid_attach(GTK_GRID(ad->grid), reset, 5, 1, 1, 1); // location of button
+    gtk_widget_set_halign(reset, GTK_ALIGN_START);
+    gtk_widget_set_hexpand(reset, TRUE);
+    g_signal_connect(reset, "clicked", G_CALLBACK(on_reset_clicked), ad); // reset button action
 
     // submit button
     GtkWidget *button = gtk_button_new_with_label("Submit");
@@ -316,42 +386,37 @@ int main(int argc, char *argv[])
     gtk_widget_set_halign(button, GTK_ALIGN_START);
     gtk_widget_set_hexpand(button, TRUE);
 
-    // labels above output boxs
+    // create header row
+    GtkWidget *header_row = gtk_list_box_row_new();
+    GtkWidget *header_grid = gtk_grid_new();
+    gtk_grid_set_column_homogeneous(GTK_GRID(header_grid), TRUE);
+    gtk_grid_set_column_spacing(GTK_GRID(header_grid), 10);
+
+    // add each label to the header grid
     GtkWidget *name = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(name), "<span font='15'>NAME</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), name, 0, 3, 1, 1); // location of name label
-    gtk_widget_set_hexpand(name, TRUE);
-    gtk_widget_set_halign(name, GTK_ALIGN_END);
-
+    gtk_label_set_markup(GTK_LABEL(name), "<span font='15' weight='bold'>NAME</span>");
     GtkWidget *weightclass = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(weightclass), "<span font='15'>WIGHTCLASS</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), weightclass, 1, 3, 1, 1); // location of weightclass label
-    gtk_widget_set_hexpand(weightclass, TRUE);
-    gtk_widget_set_halign(weightclass, GTK_ALIGN_END);
-
+    gtk_label_set_markup(GTK_LABEL(weightclass), "<span font='15' weight='bold'>WEIGHTCLASS</span>");
     GtkWidget *wins = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(wins), "<span font='15'>WINS</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), wins, 2, 3, 1, 1); // location of wins label
-    gtk_widget_set_hexpand(wins, TRUE);
-    gtk_widget_set_halign(wins, GTK_ALIGN_END);
-
+    gtk_label_set_markup(GTK_LABEL(wins), "<span font='15' weight='bold'>WINS</span>");
     GtkWidget *loses = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(loses), "<span font='15'>LOSES</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), loses, 3, 3, 1, 1); // location of loses label
-    gtk_widget_set_hexpand(loses, TRUE);
-    gtk_widget_set_halign(loses, GTK_ALIGN_END);
-
+    gtk_label_set_markup(GTK_LABEL(loses), "<span font='15' weight='bold'>LOSES</span>");
     GtkWidget *age = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(age), "<span font='15'>AGE</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), age, 4, 3, 1, 1); // location of age label
-    gtk_widget_set_hexpand(age, TRUE);
-    gtk_widget_set_halign(age, GTK_ALIGN_END);
-
+    gtk_label_set_markup(GTK_LABEL(age), "<span font='15' weight='bold'>AGE</span>");
     GtkWidget *country = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(country), "<span font='15'>COUNTRY</span>");
-    gtk_grid_attach(GTK_GRID(ad->grid), country, 5, 3, 1, 1); // location of country label
-    gtk_widget_set_hexpand(country, TRUE);
-    gtk_widget_set_halign(country, GTK_ALIGN_END);
+    gtk_label_set_markup(GTK_LABEL(country), "<span font='15' weight='bold'>COUNTRY</span>");
+
+    gtk_grid_attach(GTK_GRID(header_grid), name, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(header_grid), weightclass, 1, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(header_grid), wins, 2, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(header_grid), loses, 3, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(header_grid), age, 4, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(header_grid), country, 5, 0, 1, 1);
+
+    gtk_container_add(GTK_CONTAINER(header_row), header_grid);
+
+    // add header row to listbox
+    gtk_list_box_insert(GTK_LIST_BOX(ad->listbox), header_row, 0);
 
     // guess method
     guess(ad, button);
