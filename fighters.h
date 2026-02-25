@@ -38,6 +38,18 @@ typedef struct data{
     GtkSizeGroup  *sg_country;
 } DATA;
 
+typedef struct {
+    DATA *ad;
+    int stat; // which stat to reveal
+} HINT_DATA;
+
+#define HINT_NAME        0
+#define HINT_WEIGHTCLASS 1
+#define HINT_WINS        2
+#define HINT_LOSES       3
+#define HINT_AGE         4
+#define HINT_COUNTRY     5
+
 FIGHTER *bst_node(INFO *data);
 int get_size(FIGHTER *n);
 void bst_insert(FIGHTER **rootp, INFO *data);

@@ -54,7 +54,7 @@ static void on_htp_clicked(GtkWidget *button, DATA *ad)
         "Close", GTK_RESPONSE_CLOSE,
         NULL);
 
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 300);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 100);
 
     GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 
@@ -99,6 +99,98 @@ static void on_reset_clicked(GtkWidget *reset, DATA *ad)
 {
     ad->answer = random_fighter(ad->bst_root);
     gtk_container_foreach(GTK_CONTAINER(ad->listbox), remove_if_not_header, ad->listbox);
+}
+
+static void on_hint_reveal(GtkWidget *button, HINT_DATA *hd)
+{
+    char msg[100];
+
+    switch (hd->stat)
+    {
+    case HINT_NAME:
+        snprintf(msg, sizeof(msg), "Name: %s", hd->ad->answer->data.name);
+        break;
+    case HINT_WEIGHTCLASS:
+        snprintf(msg, sizeof(msg), "Weightclass: %s", hd->ad->answer->data.weightclass);
+        break;
+    case HINT_WINS:
+        snprintf(msg, sizeof(msg), "Wins: %d", hd->ad->answer->data.wins);
+        break;
+    case HINT_LOSES:
+        snprintf(msg, sizeof(msg), "Loses: %d", hd->ad->answer->data.loses);
+        break;
+    case HINT_AGE:
+        snprintf(msg, sizeof(msg), "Age: %d", hd->ad->answer->data.age);
+        break;
+    case HINT_COUNTRY:
+        snprintf(msg, sizeof(msg), "Country: %s", hd->ad->answer->data.country);
+        break;
+    }
+
+    gtk_button_set_label(GTK_BUTTON(button), msg);
+    gtk_widget_set_sensitive(button, FALSE); // disable after reveal
+}
+
+// hint button action
+static void on_hint_clicked(GtkWidget *button, DATA *ad)
+{
+    GtkWidget *hint_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(hint_window), "Hints");
+    gtk_window_set_default_size(GTK_WINDOW(hint_window), 400, 400);
+    gtk_window_set_transient_for(GTK_WINDOW(hint_window), GTK_WINDOW(ad->window));
+
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_margin_start(vbox, 20);
+    gtk_widget_set_margin_end(vbox, 20);
+    gtk_widget_set_margin_top(vbox, 20);
+    gtk_widget_set_margin_bottom(vbox, 20);
+    gtk_container_add(GTK_CONTAINER(hint_window), vbox);
+
+    GtkWidget *title = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(title), "<span font='15' weight='bold'>Reveal a Hint</span>");
+    gtk_box_pack_start(GTK_BOX(vbox), title, FALSE, FALSE, 0);
+
+    GtkWidget *btn_name = gtk_button_new_with_label("Reveal Name");
+    GtkWidget *btn_weightclass = gtk_button_new_with_label("Reveal Weightclass");
+    GtkWidget *btn_wins = gtk_button_new_with_label("Reveal Wins");
+    GtkWidget *btn_loses = gtk_button_new_with_label("Reveal Loses");
+    GtkWidget *btn_age = gtk_button_new_with_label("Reveal Age");
+    GtkWidget *btn_country = gtk_button_new_with_label("Reveal Country");
+
+    gtk_box_pack_start(GTK_BOX(vbox), btn_name, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), btn_weightclass, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), btn_wins, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), btn_loses, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), btn_age, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), btn_country, TRUE, TRUE, 0);
+
+    HINT_DATA *hd_name = g_new(HINT_DATA, 1);
+    hd_name->ad = ad;
+    hd_name->stat = HINT_NAME;
+    HINT_DATA *hd_weightclass = g_new(HINT_DATA, 1);
+    hd_weightclass->ad = ad;
+    hd_weightclass->stat = HINT_WEIGHTCLASS;
+    HINT_DATA *hd_wins = g_new(HINT_DATA, 1);
+    hd_wins->ad = ad;
+    hd_wins->stat = HINT_WINS;
+    HINT_DATA *hd_loses = g_new(HINT_DATA, 1);
+    hd_loses->ad = ad;
+    hd_loses->stat = HINT_LOSES;
+    HINT_DATA *hd_age = g_new(HINT_DATA, 1);
+    hd_age->ad = ad;
+    hd_age->stat = HINT_AGE;
+    HINT_DATA *hd_country = g_new(HINT_DATA, 1);
+    hd_country->ad = ad;
+    hd_country->stat = HINT_COUNTRY;
+
+    g_signal_connect(btn_name, "clicked", G_CALLBACK(on_hint_reveal), hd_name);
+    g_signal_connect(btn_weightclass, "clicked", G_CALLBACK(on_hint_reveal), hd_weightclass);
+    g_signal_connect(btn_wins, "clicked", G_CALLBACK(on_hint_reveal), hd_wins);
+    g_signal_connect(btn_loses, "clicked", G_CALLBACK(on_hint_reveal), hd_loses);
+    g_signal_connect(btn_age, "clicked", G_CALLBACK(on_hint_reveal), hd_age);
+    g_signal_connect(btn_country, "clicked", G_CALLBACK(on_hint_reveal), hd_country);
+
+    gtk_widget_show_all(hint_window);
 }
 
 // submit button action
@@ -255,6 +347,7 @@ void guess(DATA *ad, GtkWidget *button)
     ad->answer = random_fighter(ad->bst_root);
     // g_print(ad->answer->data.name);
 
+    // text feild
     ad->entry = GTK_ENTRY(gtk_entry_new());
     gtk_widget_set_size_request(GTK_WIDGET(ad->entry), 250, 30);            // size of entry box
     gtk_grid_attach(GTK_GRID(ad->grid), GTK_WIDGET(ad->entry), 2, 1, 2, 1); // location of text field
@@ -372,6 +465,13 @@ int main(int argc, char *argv[])
     g_signal_connect(htp_button, "clicked", G_CALLBACK(on_htp_clicked), ad);
 
     gtk_grid_attach(GTK_GRID(ad->grid), overlay, 0, 0, 6, 1); // attach overlay to grid
+
+    // hint button
+    GtkWidget *hint = gtk_button_new_with_label("Hint");
+    gtk_grid_attach(GTK_GRID(ad->grid), hint, 1, 1, 1, 1); // location of button
+    gtk_widget_set_halign(hint, GTK_ALIGN_START);
+    gtk_widget_set_hexpand(hint, TRUE);
+    g_signal_connect(hint, "clicked", G_CALLBACK(on_hint_clicked), ad); // reset button action
 
     // reset button
     GtkWidget *reset = gtk_button_new_with_label("New Game");
