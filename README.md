@@ -1,16 +1,25 @@
-# About the Project
-Thanks so much for viewing my project. This was a passion project for me and something I built for myself to play and enjoy. However, I feel like other people can find the same enjoyment from it.
+# UFCdle
+A Wordle-style guessing game for UFC fighters built in C with GTK 3.
+
+![screenshot](screenshot.png)
 
 # How to Play
-When you run the game, it will choose a random UFC fighter from the list, and your goal is to attempt to guess that fighter in as little amounts of guesses as possible. Each guess you make will provide you with information to help you with the next guess you make. You must use that information and your own knowledge of UFC fighters to guess the correct fighter. Good Luck and Enjoy.
+A random UFC fighter is selected at the start of each game. Guess fighters 
+by typing their name and pressing Submit. Each guess reveals stats compared 
+to the mystery fighter:
+- 🟩 GREEN = correct
+- 🟥 RED = incorrect
+- HIGHER / LOWER = the answer's stat is higher or lower than your guess
+
+Use the hints button if you get stuck. Guess the fighter in as few tries as possible!
 
 # How to Build
-
-Requires:
+### Requirements
 - gcc
-- GTK 3 (or GTK 4)
+- GTK 3
+- MSYS2 (Windows)
 
-## Steps to Build
+### Steps
 1. cd path-to-your-project
 2. gcc main.c fighters.c -o run.exe 'pkg-config --cflags --libs gtk+-3.0'
 3. ./run.exe
